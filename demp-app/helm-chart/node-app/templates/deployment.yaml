@@ -1,0 +1,82 @@
+{{- if .Values.gateway.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-{{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+    env: {{ .Values.appEnvironment }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.maxSurge }}
+      maxUnavailable: {{ .Values.maxUnavailable }}
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+      env: {{ .Values.appEnvironment }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+        env: {{ .Values.appEnvironment }}
+    spec:
+      containers:
+        - name: {{ .Values.appName }}
+          image: "{{ .Values.containers.image.repository }}:{{ .Values.containers.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.containers.image.pullPolicy }}
+          env:
+          - name: DEFAULT_FEATURE
+            value: {{ .Values.env.DEFAULT_FEATURE }}
+          - name: ASPNETCORE_ENVIRONMENT
+            value: {{ .Values.appEnvironment }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containers.ports.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.containers.healthChecks.path }}
+              port: {{ .Values.containers.ports.containerPort }}
+            initialDelaySeconds: {{ .Values.containers.healthChecks.initialDelaySeconds }}
+            periodSeconds: {{ .Values.containers.healthChecks.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.containers.healthChecks.path }}
+              port: {{ .Values.containers.ports.containerPort }}
+            initialDelaySeconds: {{ .Values.containers.healthChecks.initialDelaySeconds }}
+            periodSeconds: {{ .Values.containers.healthChecks.periodSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: cache-volume
+              mountPath: /tmp
+            {{- if .Values.stackify.enabled }}
+            - name: stackify
+              mountPath: /usr/local/stackify
+            - name: configfiles
+              mountPath: /app/Stackify.json
+              subPath: Stackify.json
+            {{- end }}
+      volumes:
+      - name: cache-volume
+        emptyDir: {}
+      {{- if .Values.stackify.enabled }}
+      - name: stackify
+        hostPath:
+          path: /var/stackify
+      - name: configfiles
+        configMap:
+          name: cnf-stackify-{{ .Values.appName }}
+          items:
+          - key: Stackify.json
+            path: Stackify.json
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
