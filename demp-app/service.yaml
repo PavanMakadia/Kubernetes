@@ -17,3 +17,46 @@ spec:
     app: node-app
     env: dev
   type: ClusterIP
+---
+
+# NodePort Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-np-node-app
+  namespace: ns-demo
+spec:
+  type: NodePort
+  selector:
+    app: node-app
+    env: dev
+  ports:
+    # By default and for convenience, the `targetPort` is set to the same value as the `port` field.
+    - port: 80
+      targetPort: http
+      # Optional field
+      # By default and for convenience, the Kubernetes control plane will allocate a port from a range (default: 30000-32767)
+      nodePort: 30007
+---
+
+# LoadBalancer Service
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: node-app
+    env: dev
+  name: svc-lb-node-app
+  namespace: ns-demo
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: node-app
+    env: dev
+  type: LoadBalancer
+---
+
