@@ -17,3 +17,48 @@ spec:
     app: {{ .Values.service.selector.app }}
     env: {{ .Values.appEnvironment }}
 {{- end }}
+---
+
+# LoadBalancer Service Definition
+{{- if .Values.serviceLB.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-lb-{{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+    env: {{ .Values.appEnvironment }}
+spec:
+  ports:
+    - port: {{ .Values.serviceLB.port }}
+      targetPort: {{ .Values.serviceLB.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.serviceLB.selector.app }}
+    env: {{ .Values.appEnvironment }}
+{{- end }}
+---
+
+
+# NodePort Service Definition
+{{- if .Values.serviceNP.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-np-{{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+    env: {{ .Values.appEnvironment }}
+spec:
+  ports:
+    - port: {{ .Values.serviceNP.port }}
+      targetPort: {{ .Values.serviceNP.targetPort }}
+      nodePort: {{ .Values.serviceNP.nodePort }}
+      name: http
+  selector:
+    app: {{ .Values.serviceNP.selector.app }}
+    env: {{ .Values.appEnvironment }}
+{{- end }}

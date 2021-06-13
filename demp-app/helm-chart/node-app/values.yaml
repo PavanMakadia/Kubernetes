@@ -48,6 +48,9 @@ resources:
     cpu: 100m
     memory: 512Mi
 
+configmap:
+  enabled: true
+
 nodeSelector: {}
 
 # Service definition
@@ -58,6 +61,22 @@ service:
   selector:
     app: node-app
 
+# LoadBalancer Service
+serviceLB:
+  enabled: false
+  port: 80
+  selector:
+    app: node-app
+
+# NodePort Service
+serviceNP:
+  enabled: false
+  port: 80
+  nodePort: 30007
+  selector:
+    app: node-app
+
+
 # HPA autoscaling definition
 autoscaling:
   enabled: true
@@ -67,6 +86,7 @@ autoscaling:
   # targetRequestPerSecond: "3000m"
   # targetRequestPerSecondMetricName: app_httprequests_transactions_count_avg
   # targetMemoryUtilizationPercentage: 80
+
 
 # Ingress gateway configurations
 ingress:
@@ -86,4 +106,4 @@ ingress:
   path: /
   #tls:
   #  enabled: true
-  #  secretName: proplay-ssl-cert
+  #  secretName: example-ssl-cert

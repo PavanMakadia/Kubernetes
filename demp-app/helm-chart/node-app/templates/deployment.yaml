@@ -54,27 +54,24 @@ spec:
           volumeMounts:
             - name: cache-volume
               mountPath: /tmp
-            {{- if .Values.stackify.enabled }}
-            - name: stackify
-              mountPath: /usr/local/stackify
-            - name: configfiles
-              mountPath: /app/Stackify.json
-              subPath: Stackify.json
+            {{- if .Values.configmap.enabled }}
+            - name: configfile
+              mountPath: /app/config.json
+              subPath: config.json
             {{- end }}
       volumes:
-      - name: cache-volume
-        emptyDir: {}
-      {{- if .Values.stackify.enabled }}
-      - name: stackify
-        hostPath:
-          path: /var/stackify
-      - name: configfiles
-        configMap:
-          name: cnf-stackify-{{ .Values.appName }}
+      - hostPath:
+          path: /tmp/node-app
+        name: cache-volume
+      {{- if .Values.configmap.enabled }}
+      - configMap:
+          defaultMode: 420
           items:
-          - key: Stackify.json
-            path: Stackify.json
-      {{- end }}
+            - key: config.json
+              path: config.json
+          name: cnf-configfile
+        name: configfile
+      {{- end }}  
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
